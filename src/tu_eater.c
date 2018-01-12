@@ -822,7 +822,7 @@ static void function_to_dot(node *n)
 {
 	int name_id;
 	node *name;
-	int value[128];
+	char value[128];
 
 	sscanf(n->_inner, " name: @%d", &name_id);	
 	name = search_pool(name_id, pool, n_inpool);
@@ -1859,7 +1859,7 @@ static node** read_statement(node *n)
 	return node_list;
 }
 
-static node **parse_stmt(node **node_list)
+/*static node **parse_stmt(node **node_list)
 {
 	// first parse the statement
 	int num_node;
@@ -1885,12 +1885,12 @@ static node **parse_stmt(node **node_list)
 	node **expr_list = (node **)calloc(num_node+2, sizeof(node*));
 	// find the node from the node_list and add to the expr_list
 
-/*	*expr_list = search_pool(expr[0], pool, n_inpool);
-	for(int i=1; i<num_node+1;i++)
-	{
-	*(expr_list+i) = search_pool(expr[i], pool, n_inpool);
-	(*(expr_list+i))->prev = *(expr_list+i-1);
-	}*/
+//	*expr_list = search_pool(expr[0], pool, n_inpool);
+//	for(int i=1; i<num_node+1;i++)
+//	{
+//	*(expr_list+i) = search_pool(expr[i], pool, n_inpool);
+//	(*(expr_list+i))->prev = *(expr_list+i-1);
+//	}
 	counter = 1;
 	int nelms = 1;
 	node *temp = *(node_list+counter);
@@ -1926,9 +1926,9 @@ static node **parse_stmt(node **node_list)
 		
 
 	return expr_list; 
-}
+}*/
 
-static void 
+/*static void 
 dump_list(node **node_list, char* scope, node *start_node)
 {
 	node *temp;
@@ -1967,7 +1967,7 @@ dump_list(node **node_list, char* scope, node *start_node)
 
 	free(expr_list);
 	free(scope_ident);
-}
+}*/
 
 static void 
 emit_header(char *scpe, int start_id)
@@ -1987,6 +1987,7 @@ static void eval_statement(node *n, char *scope)
 	// n contains name of the scope
 	node **node_list;
 	node *temp;
+	int i;
 
 	int ident_id = n->_id;
 	char value[64];
@@ -2042,7 +2043,7 @@ static void eval_statement(node *n, char *scope)
 	n->_dot_id = 1;
 	counter = 1;
 
-	for(int i=1; i <= num_op; i++)
+	for(i=1; i <= num_op; i++)
 	{
 		temp = search_pool((*(op+i-1)), pool, n_inpool);
 		if(temp->_ntype == decl_expr)
@@ -2052,22 +2053,12 @@ static void eval_statement(node *n, char *scope)
 		counter++;
 	}
 
-	for(int i=1; i < counter ; i++)
+	for(i=1; i < counter ; i++)
 	{
 		temp = *(node_list+i);
 		(*(node_list+i))->to_dot(*(node_list+i));
 	}
 
-	free(node_list);
-	return ;
-	node_list = read_statement(n);
-	// read up coming statements utill return
-	dump_list(node_list, scope, n);
-
-	// n is the start of the scope
-	// to_dot is called only in dump_list
-	// dump_node is used for debugging
-	
 	free(node_list);
 }
 
@@ -2122,7 +2113,7 @@ eval_file(char *name)
 
         if( fclose(fp) == EOF)
         {
-                fprintf(stderr, "File close error:%s\n");
+                fprintf(stderr, "File close error\n");
                 fflush(stderr);
                 exit(0);
         }
