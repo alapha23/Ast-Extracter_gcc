@@ -14,7 +14,7 @@ Usage
 
 	$bash  gen_ast.sh  <dir/filename>  <scope name>
 
-[Imgur](https://i.imgur.com/PKzsW7l.png)
+![Imgur](https://i.imgur.com/PKzsW7l.png)
 
 Tested GCC Version
 ---
