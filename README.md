@@ -20,6 +20,7 @@ Tested GCC Version
 ---
 
 gcc (GCC) 7.2.1 20170915 (Red Hat 7.2.1-2)
+gcc (Gentoo 4.9.3 p1.2, pie-0.6.3) 4.9.3
 
 
 LICENSE
