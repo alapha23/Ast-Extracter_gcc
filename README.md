@@ -7,11 +7,14 @@ Only C programs have been tested.
 
 Features later than c99 is not tested. 
 
+Make sure dot and atril is installed on your OS. 
+
 Usage
 ---
 
-	$bash gen_ast.sh <dir/filename> <scope name>
+	$bash  gen_ast.sh  <dir/filename>  <scope name>
 
+[Imgur](https://i.imgur.com/PKzsW7l.png)
 
 Tested GCC Version
 ---
