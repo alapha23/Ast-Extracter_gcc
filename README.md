@@ -1,4 +1,4 @@
-## Abstract Syntax Tree Extracter from GCC
+## Abstract Syntax Tree Extracter for GCC
 
 Overview
 ---
