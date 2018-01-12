@@ -1415,9 +1415,9 @@ static void
 stub_to_dot(node *n)
 {
 	// TODO
-	DEBUG(Stub);
-	DEBUF("%d", n->_id);
-	DEBUF("%s", n->_inner);
+//	DEBUG(Stub);
+//	DEBUF("%d", n->_id);
+//	DEBUF("%s", n->_inner);
 }
 
 static void  
