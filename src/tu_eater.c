@@ -1809,7 +1809,8 @@ open_file(char **argv)
 {
         if((fp =fopen(argv[1], "r")) == NULL)
         {
-                fprintf(stderr, "Usage: ./tu_eater <file dir>\n");
+		fprintf(stderr, "filedir: %s\n", argv[1]);
+                fprintf(stderr, "Usage: ./tu_eater <file dir> <scope>\n");
                 fflush(stderr);
                 exit(0);
         }
