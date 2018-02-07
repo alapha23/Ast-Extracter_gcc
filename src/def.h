@@ -64,6 +64,7 @@
 #define rshift_expr	0x12e
 #define lshift_expr	0x12f
 #define save_expr	0x130
+#define bit_and_expr	0x131
 
 // continue == stmt_list with two expr: predict expr & goto_expr
 

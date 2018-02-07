@@ -19,9 +19,9 @@
 	fflush(stdout);\
 	inc_id();})
 // it returns the new inc_id
-#define dot_link(id1, id2)  fprintf(stdout, "  node%d->node%d;\n", id1, id2); \
+#define dot_link(id1, id2)  fprintf(stdout, "  node%d -> node%d;\n", id1, id2); \
 	fflush(stdout)
-#define dot_link_dt(id1, id2)  fprintf(stdout, "  node%d -> node%d [style=dotted]\n", id1, id2); \
+#define dot_link_dt(id1, id2)  fprintf(stdout, "  node%d -> node%d [style=dotted];\n", id1, id2); \
 	fflush(stdout)
 #define ADD2POOL(node, pool, n)  *(pool+n) = node; \
 				     	n++
@@ -47,8 +47,8 @@
 #define get_next(n, pool, n_inpool) (get_by_num(n->_id, pool, n_inpool))
 
 #define INNER_SIZE	2048
-#define NUM_EXPR	64
-#define NUM_NODE	64
+#define NUM_EXPR	256	
+#define NUM_NODE	256
 // Assume number of stmt within a stmt list is within 1024
 // TODO
 // Only check 128 nodes in the statement list
@@ -204,5 +204,7 @@ static void rshift_to_dot(node *);
 static void lshift_to_dot(node *);
 
 static void function_to_dot(node *);
+
+static void bit_and_to_dot(node *);
 #endif
 

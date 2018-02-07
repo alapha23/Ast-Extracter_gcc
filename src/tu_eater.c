@@ -62,7 +62,7 @@ eval_node(void)
 		fgets(line, 72, fp);
 		strcat(n->_inner, line);
 		inner_len++;
-		if(inner_len*72 > 2000)
+		if(inner_len*72 > INNER_SIZE)
 		{
 			DEBUG(Inner content exceed default);
 			DEBUG(Please modify INNER_SIZE in the header file);
@@ -476,6 +476,28 @@ static void eq_to_dot(node *n)
 	dot_link_dt(n->prev->_dot_id, n->_dot_id);
 }
 
+static void bit_and_to_dot(node *n)
+{
+	int id1, id2;
+	sscanf(n->_inner, "%*s @%*d op 0: @%d op 1: @%d ", &id1, &id2);
+
+	node *op1 = search_pool(id1, pool, n_inpool);
+	node *op2 = search_pool(id2, pool, n_inpool);
+
+	assert(op1 != NULL);
+	assert(op2 != NULL);
+	int t_dot_id = dot_shape(n->_id, "&");
+	n->_dot_id = t_dot_id;
+
+	op1->prev = n;
+	op2->prev = n;
+	op1->to_dot(op1);
+	// op1 is a vardecl, it should be emiting its name
+	op2->to_dot(op2);
+
+	// connect with the previous node
+	dot_link_dt(n->prev->_dot_id, n->_dot_id);
+}
 
 static void ne_to_dot(node *n)
 {
@@ -657,6 +679,7 @@ static void cond_to_dot(node *n)
 	int num_op = 0;
 	int *op;
 
+	DEBUG(COND_EXPR CALLED);
 	op = read_op_inner(n->_inner, &num_op);
 
 	if(num_op > 2)
@@ -748,6 +771,7 @@ static void else_to_dot(node *n)
 
 	op = read_op_inner(n->_inner, &num_op);
 
+//	DEBUG(ELSE_TO_DOT called);
 	if(num_op > 2)
 	{
 		DEBUF("id: %d", n->_id);
@@ -1776,16 +1800,25 @@ static NODE_TYPE str2node(char *node_type, node *n)
 			}
 			break;
 		case 'b':
-			if(*(node_type+1) == 'o')
-				_t = boolean_type;
-			else if(*(node_type+1) == 'i')
+			switch(*(node_type+2))
 			{
-				_t = bind_expr;
-				n->to_dot = bind_to_dot;
-			}	
+				case 't':
+					_t = bit_and_expr;
+					n->to_dot =  bit_and_to_dot;
+					break;
+				case 'o':
+					_t = boolean_type;
+					break;
+				case 'n':
+					_t = bind_expr;
+					n->to_dot = bind_to_dot;
+					break;
+				default:
+					DEBUF("Unknown node type: %s", node_type);
+					exit(1);
+			}
 			break;
-
-		default:
+		default:			
 			_t = -1;
 			fprintf(stderr, "Unknown node type:%s\n", node_type);
 			fflush(stderr);
@@ -2007,60 +2040,123 @@ static void eval_statement(node *n, char *scope)
 		}
 	};
 
+	// body is the id of the bind_expr from function_decl.
+	// temp is the node of function_decl
 	char *body = strstr(temp->_inner, "body:");
 	int body_id;
 	sscanf(body, "body: @%d", &body_id);
 	temp = search_pool(body_id, pool, n_inpool);
+	// temp is the body node--> bind_expr or statement_list
 	int bind_id;
-	sscanf(temp->_inner, " %*[^b] body: @%d", &bind_id);
-	n = search_pool(bind_id, pool, n_inpool);
-	if(n->_ntype != statement_list)
+//	DEBUF("type of temp: %p ", temp->_ntype);
+//	DEBUF("content of temp %s", temp->_inner);
+	if(temp->_ntype == bind_expr)
 	{
-		DEBUF("node type %d unexpected", n->_ntype);
-		exit(0);
-	}
-
-	int num_op = 0;
-	int op[NUM_EXPR];
-	int counter=0;
-	char *inner = n->_inner;
-	while(1)
-	{
-//	op = read_op_inner(n->_inner, &num_op);	
-		if(*(inner+counter) == '\0')
-			break;
-		if(*(inner+counter) == '@')
+		sscanf(temp->_inner, " %*[^b] body: @%d", &bind_id);
+		n = search_pool(bind_id, pool, n_inpool);
+		if(n->_ntype != statement_list)
 		{
-			sscanf(inner+counter-6, "%d ", &num_op);
-			sscanf(inner+counter+1, "%d ", &op[num_op]);		
+			DEBUF("node type %p unexpected, expected statement_list", n->_ntype);
+			exit(1);
 		}
-		counter++;
-	}
-	num_op++;
+
+		int num_op = 0;
+		int op[NUM_EXPR];
+		int counter=0;
+		char *inner = n->_inner;
+		while(1)
+		{
+	//	op = read_op_inner(n->_inner, &num_op);	
+			if(*(inner+counter) == '\0')
+				break;
+			if(*(inner+counter) == '@')
+			{
+				sscanf(inner+counter-6, "%d ", &num_op);
+				sscanf(inner+counter+1, "%d ", &op[num_op]);		
+			}
+			counter++;
+		}
+		num_op++;
+		
 	
-
-	node_list = calloc(num_op+1, sizeof(node*));
-	*node_list = n;
-	n->_dot_id = 1;
-	counter = 1;
-
-	for(i=1; i <= num_op; i++)
-	{
-		temp = search_pool((*(op+i-1)), pool, n_inpool);
-		if(temp->_ntype == decl_expr)
-			continue;
-		*(node_list+counter) = temp;
-		(*(node_list+counter))->prev = (*(node_list+counter-1));
-		counter++;
+		node_list = calloc(num_op+1, sizeof(node*));
+		*node_list = n;
+		n->_dot_id = 1;
+		counter = 1;
+	
+		for(i=1; i <= num_op; i++)
+		{
+			temp = search_pool((*(op+i-1)), pool, n_inpool);
+			if(temp->_ntype == decl_expr)
+				continue;
+			*(node_list+counter) = temp;
+			(*(node_list+counter))->prev = (*(node_list+counter-1));
+			counter++;
+		}
+		for(i=1; i < counter ; i++)
+		{
+			temp = *(node_list+i);
+			(*(node_list+i))->to_dot(*(node_list+i));
+		}
+		free(node_list);
 	}
-
-	for(i=1; i < counter ; i++)
+	else if(temp->_ntype == statement_list)
 	{
-		temp = *(node_list+i);
-		(*(node_list+i))->to_dot(*(node_list+i));
-	}
+		// temp is statement_list
+		// n becomes statement_list
+		n = temp; 
+		if(n->_ntype != statement_list)
+		{
+			DEBUF("node type %p unexpected, expected statement_list", n->_ntype);
+			exit(1);
+		}
 
-	free(node_list);
+		int num_op = 0;
+		int op[NUM_EXPR];
+		int counter=0;
+		char *inner = n->_inner;
+		while(1)
+		{
+	//	op = read_op_inner(n->_inner, &num_op);	
+			if(*(inner+counter) == '\0')
+				break;
+			if(*(inner+counter) == '@')
+			{
+				sscanf(inner+counter-6, "%d ", &num_op);
+				sscanf(inner+counter+1, "%d ", &op[num_op]);		
+			}
+			counter++;
+		}
+		num_op++;
+		
+	
+		node_list = calloc(num_op+1, sizeof(node*));
+		*node_list = n;
+		n->_dot_id = 1;
+		counter = 1;
+	
+		for(i=1; i <= num_op; i++)
+		{
+			temp = search_pool((*(op+i-1)), pool, n_inpool);
+			if(temp->_ntype == decl_expr)
+				continue;
+			*(node_list+counter) = temp;
+			(*(node_list+counter))->prev = (*(node_list+counter-1));
+			counter++;
+		}
+		for(i=1; i < counter ; i++)
+		{
+			temp = *(node_list+i);
+			(*(node_list+i))->to_dot(*(node_list+i));
+		}
+		free(node_list);
+
+	}
+	else
+	{
+		DEBUF("Unknown node type: %p, expected bind_expr or statement_list", temp->_ntype);
+		exit(1);
+	}
 }
 
 size_t 
