@@ -679,7 +679,6 @@ static void cond_to_dot(node *n)
 	int num_op = 0;
 	int *op;
 
-	DEBUG(COND_EXPR CALLED);
 	op = read_op_inner(n->_inner, &num_op);
 
 	if(num_op > 2)
