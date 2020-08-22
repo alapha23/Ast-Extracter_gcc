@@ -5,22 +5,24 @@ foo=".001t.tu"
 # die() { yell "$*"; exit 111; }
 # try() { "$@" || die "cannot $*"; }
 
-rm tu_eater *.*.*
+#rm tu_eater *.*.*
 
 if [ -z "$SCOPENAME" ]; then
 	echo "Usage: bash ./gen_ast.sh <file name> <scope name>"
-	echo "test files are supposed to be placed under ./test"
 	echo "example: bash ./gen_ast.sh test/helloworld.c main"
+	echo "new test files are placed under ./test"
+	echo "'sudo apt install graphviz' in case dot command not found"
 	exit 1;
 fi
 
-gcc -o tu_eater src/tu_eater.c src/tu_eater.h
+#gcc -o bin/tu_eater src/tu_eater.c src/tu_eater.h
 gcc -std=c99 -fdump-translation-unit -fno-builtin -ffreestanding -c  $FILENAME 
-./tu_eater "${FILENAME:5}$foo" $SCOPENAME > result/ast.dot
+./bin/tu_eater "${FILENAME:5}$foo" $SCOPENAME > result/ast.dot
 dot -Tpdf -o result/ast.pdf result/ast.dot 
-atril result/ast.pdf &
+xdg-open result/ast.pdf
+#atril result/ast.pdf &
 
-rm *.o #*.*.* tu_eater
+rm *.o *.tu #*.*.* tu_eater
 unset FILENAME SCOPENAME
 
 # fno-builtin: Don't recognize built-in functions that do not begin with __builtin_ as prefix.
